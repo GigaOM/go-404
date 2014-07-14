@@ -1,13 +1,12 @@
 <?php
 /**
- * GO_Marketo unit tests
+ * GO_404 unit tests
  */
 
 require_once dirname( __DIR__ ) . '/go-404.php';
 
 /**
- * Our tests depend on the real Marketo authentication info from the system
- * config.
+ * the test class
  */
 class GO_404_Test extends WP_UnitTestCase
 {
