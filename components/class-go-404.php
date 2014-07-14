@@ -9,7 +9,7 @@ class GO_404
 	 */
 	public function __construct()
 	{
-		add_action( 'template_redirect', array( $this, 'template_redirect' ) );
+		add_action( 'template_redirect', array( $this, 'template_redirect' ), 11 );
 	}//END __construct
 
 	/**
