@@ -30,7 +30,7 @@ class GO_404
 			return;
 		}
 
-		wp_redirect( $url );
+		wp_redirect( esc_url_raw( $url ) );
 		exit;
 	}//END template_redirect
 
@@ -44,12 +44,14 @@ class GO_404
 	public function clean_and_validate_url( $url )
 	{
 		$url = preg_replace( '!/[^/]*?$!', '', $url );
+
 		if ( empty( $url ) )
 		{
 			return NULL;
 		}
 
 		$post_id = url_to_postid( $url );
+
 		if ( 0 == $post_id )
 		{
 			return NULL;
