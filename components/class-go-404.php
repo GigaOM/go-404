@@ -30,7 +30,7 @@ class GO_404
 			return;
 		}
 
-		wp_redirect( $url );
+		wp_redirect( esc_url_raw( $url ) );
 		exit;
 	}//END template_redirect
 
