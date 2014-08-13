@@ -54,7 +54,7 @@ class GO_404
 		if ( FALSE === $post_id )
 		{
 			$post_id = url_to_postid( $url );
-			wp_cache_set( $url, 'go-404-url-to-postid' );
+			wp_cache_set( $url, $post_id, 'go-404-url-to-postid' );
 		}//end if
 
 		if ( 0 == $post_id )
