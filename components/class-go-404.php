@@ -4,6 +4,8 @@
  */
 class GO_404
 {
+	private $postid_cache_group = 'go-404-url-to-postid';
+
 	/**
 	 * constructor
 	 */
@@ -50,11 +52,11 @@ class GO_404
 			return NULL;
 		}
 
-		$post_id = wp_cache_get( $url, 'go-404-url-to-postid' );
+		$post_id = wp_cache_get( $url, $this->postid_cache_group );
 		if ( FALSE === $post_id )
 		{
 			$post_id = url_to_postid( $url );
-			wp_cache_set( $url, $post_id, 'go-404-url-to-postid' );
+			wp_cache_set( $url, $post_id, $this->postid_cache_group );
 		}//end if
 
 		if ( 0 == $post_id )
