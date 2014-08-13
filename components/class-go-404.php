@@ -50,7 +50,12 @@ class GO_404
 			return NULL;
 		}
 
-		$post_id = url_to_postid( $url );
+		$post_id = wp_cache_get( $url, 'go-404-url-to-postid' );
+		if ( FALSE === $post_id )
+		{
+			$post_id = url_to_postid( $url );
+			wp_cache_set( $url, 'go-404-url-to-postid' );
+		}//end if
 
 		if ( 0 == $post_id )
 		{
