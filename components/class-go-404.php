@@ -27,12 +27,33 @@ class GO_404
 
 		$url = $this->clean_and_validate_url( $_SERVER['REQUEST_URI'] );
 
-		if ( empty( $url ) )
+		if ( ! empty( $url ) )
+		{
+			wp_redirect( esc_url_raw( $url ) );
+			exit;
+		}
+
+		global $wp_query;
+
+		if ( empty( $wp_query->query['name'] ) )
 		{
 			return;
 		}
 
-		wp_redirect( esc_url_raw( $url ) );
+		// if we have a post slug, try looking up the post by slug
+		$posts = get_posts(
+			array(
+				'name' => $wp_query->query['name'],
+				'post_status' => 'publish',
+			)
+		);
+
+		if ( empty( $posts ) )
+		{
+			return;
+		}
+
+		wp_redirect( get_permalink( $posts[0]->ID ) );
 		exit;
 	}//END template_redirect
 
