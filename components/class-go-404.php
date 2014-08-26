@@ -5,6 +5,7 @@
 class GO_404
 {
 	private $postid_cache_group = 'go-404-url-to-postid';
+	private $postslug_cache_group = 'go-404-slug-to-postid';
 
 	/**
 	 * constructor
@@ -33,28 +34,13 @@ class GO_404
 			exit;
 		}
 
-		global $wp_query;
+		$url = $this->get_url_by_slug();
 
-		if ( empty( $wp_query->query['name'] ) )
+		if ( ! empty( $url ) )
 		{
-			return;
+			wp_redirect( esc_url_raw( $url ) );
+			exit;
 		}
-
-		// if we have a post slug, try looking up the post by slug
-		$posts = get_posts(
-			array(
-				'name' => $wp_query->query['name'],
-				'post_status' => 'publish',
-			)
-		);
-
-		if ( empty( $posts ) )
-		{
-			return;
-		}
-
-		wp_redirect( get_permalink( $posts[0]->ID ) );
-		exit;
 	}//END template_redirect
 
 	/**
@@ -87,6 +73,56 @@ class GO_404
 
 		return get_permalink( $post_id );
 	}//END clean_and_validate_url
+
+	/**
+	 * attemp to find a good url by using the post slug (from wp_query) if any
+	 *
+	 * @return mixed permalink to the queried post, or NULL if we cannot
+	 *  find one.
+	 */
+	public function get_url_by_slug()
+	{
+		global $wp_query;
+
+		if ( empty( $wp_query->query['name'] ) )
+		{
+			return NULL;
+		}
+
+		$post_slug = $wp_query->query['name'];
+
+		$post_id = wp_cache_get( $post_slug, $this->postslug_cache_group );
+
+		if ( ( FALSE !== $post_id ) && empty( $post_id ) )
+		{
+			// $post_slug is mapped to an empty result (slug not found)
+			return NULL;
+		}
+		elseif ( FALSE === $post_id )
+		{
+			// if we have a post slug, try looking up the post by slug
+			$posts = get_posts(
+				array(
+					'name' => $post_slug,
+					'post_status' => 'publish',
+					'post_type' => ( ! empty( $wp_query->query['post_type'] ) ? $wp_query->query['post_type'] : 'post' ),
+				)
+			);
+
+			if ( empty( $posts ) )
+			{
+				// store the negative result too so we won't rerun the same query again next time
+				wp_cache_set( $post_slug, '', $this->postslug_cache_group );
+				return NULL;
+			}
+
+			$post_id = $posts[0]->ID;
+
+			wp_cache_set( $post_slug, $post_id, $this->postslug_cache_group );
+		}//END elseif
+
+		return get_permalink( $post_id );
+	}//END get_url_by_slug
 }//END class
 
 /**
