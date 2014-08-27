@@ -4,8 +4,8 @@
  */
 class GO_404
 {
-	private $postid_cache_group = 'go-404-url-to-postid';
-	private $postslug_cache_group = 'go-404-slug-to-postid';
+	private $post_url_cache_group = 'go-404-url-to-postid';
+	private $post_slug_cache_group = 'go-404-slug-to-postid';
 
 	/**
 	 * constructor
@@ -26,17 +26,17 @@ class GO_404
 			return;
 		}
 
-		$url = $this->clean_and_validate_url( $_SERVER['REQUEST_URI'] );
-
-		if ( ! empty( $url ) )
+		// can we salvage this request by stripping out some trailing chars?
+		if ( $url = $this->validate_url_without_trailing_chars( $_SERVER['REQUEST_URI'] ) )
 		{
 			wp_redirect( esc_url_raw( $url ) );
 			exit;
 		}
 
-		$url = $this->get_url_by_slug();
+		global $wp_query;
 
-		if ( ! empty( $url ) )
+		// or can we salvage this request by looking at just the post slug?
+		if ( $url = $this->get_url_by_slug( $wp_query ) )
 		{
 			wp_redirect( esc_url_raw( $url ) );
 			exit;
@@ -44,13 +44,15 @@ class GO_404
 	}//END template_redirect
 
 	/**
-	 * attempt to clean up and validate $url.
+	 * Try to validate $url after stripping out any characters after the
+	 * last slash (/) to work around some redirects that appended some junk
+	 * characters after a valid url.
 	 *
 	 * @param string $url an url to be cleaned up and validated
 	 * @return a cleaned and validated url, or NULL if $url cannot be cleaned
 	 *  or validated
 	 */
-	public function clean_and_validate_url( $url )
+	public function validate_url_without_trailing_chars( $url )
 	{
 		$url = preg_replace( '!/[^/]*?$!', '', $url );
 
@@ -59,11 +61,11 @@ class GO_404
 			return NULL;
 		}
 
-		$post_id = wp_cache_get( $url, $this->postid_cache_group );
+		$post_id = wp_cache_get( $url, $this->post_url_cache_group );
 		if ( FALSE === $post_id )
 		{
 			$post_id = url_to_postid( $url );
-			wp_cache_set( $url, $post_id, $this->postid_cache_group );
+			wp_cache_set( $url, $post_id, $this->post_url_cache_group );
 		}//end if
 
 		if ( 0 == $post_id )
@@ -72,18 +74,17 @@ class GO_404
 		}
 
 		return get_permalink( $post_id );
-	}//END clean_and_validate_url
+	}//END validate_url_without_trailing_chars
 
 	/**
 	 * attemp to find a good url by using the post slug (from wp_query) if any
 	 *
+	 * @param WP_Query the WP_Query object to use for processing the post slug
 	 * @return mixed permalink to the queried post, or NULL if we cannot
 	 *  find one.
 	 */
-	public function get_url_by_slug()
+	public function get_url_by_slug( $wp_query )
 	{
-		global $wp_query;
-
 		if ( empty( $wp_query->query['name'] ) )
 		{
 			return NULL;
@@ -91,7 +92,7 @@ class GO_404
 
 		$post_slug = $wp_query->query['name'];
 
-		$post_id = wp_cache_get( $post_slug, $this->postslug_cache_group );
+		$post_id = wp_cache_get( $post_slug, $this->post_slug_cache_group );
 
 		if ( ( FALSE !== $post_id ) && empty( $post_id ) )
 		{
@@ -112,13 +113,13 @@ class GO_404
 			if ( empty( $posts ) )
 			{
 				// store the negative result too so we won't rerun the same query again next time
-				wp_cache_set( $post_slug, '', $this->postslug_cache_group );
+				wp_cache_set( $post_slug, '', $this->post_slug_cache_group );
 				return NULL;
 			}
 
 			$post_id = $posts[0]->ID;
 
-			wp_cache_set( $post_slug, $post_id, $this->postslug_cache_group );
+			wp_cache_set( $post_slug, $post_id, $this->post_slug_cache_group );
 		}//END elseif
 
 		return get_permalink( $post_id );
