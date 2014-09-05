@@ -102,6 +102,7 @@ class GO_404
 		elseif ( FALSE === $post_id )
 		{
 			// if we have a post slug, try looking up the post by slug
+			// note that both successes and failures are cached
 			$posts = get_posts(
 				array(
 					'name' => $post_slug,
