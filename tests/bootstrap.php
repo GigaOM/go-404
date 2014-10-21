@@ -18,8 +18,8 @@ if ( file_exists( $bootstrap ) )
 		'active_plugins' => array(
 			'go-config/go-config.php',
 		),
-		'template' => 'vip/gigaom4-parent',
-		'stylesheet' => 'vip/gigaom4-child',
+		'template' => 'vip/gigaom5',
+		'stylesheet' => 'vip/gigaom5',
 	);
 
 	require_once $bootstrap;
